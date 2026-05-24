@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Environment
+.env
+*.env
+
+# Conda env
+valreport/
+
+# Node
+node_modules/
+dist/
+.next/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated reports output
+backend/reports/
+*.pdf
+*.docx
+
+# Docker
+postgres_data/
