@@ -56,3 +56,11 @@ export const reportsApi = {
   export: (id: string, format: "pdf" | "docx") =>
     api.get(`/reports/${id}/export/${format}`, { responseType: "blob" }),
 };
+
+// Public review endpoints (no auth required)
+export const reviewApi = {
+  getByToken: (token: string) =>
+    axios.get(`${BASE_URL}/reports/review/${token}`),
+  approveByToken: (token: string, data: { reviewer_name: string; comment: string }) =>
+    axios.post(`${BASE_URL}/reports/review/${token}/approve`, data),
+};

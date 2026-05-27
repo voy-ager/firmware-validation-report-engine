@@ -4,6 +4,7 @@ import LoginPage from "./pages/Login.tsx";
 import DashboardPage from "./pages/Dashboard.tsx";
 import NewReportPage from "./pages/NewReport.tsx";
 import ReviewPage from "./pages/Review.tsx";
+import ReviewTokenPage from "./pages/ReviewToken.tsx";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/reports/:id" element={
           <ProtectedRoute><ReviewPage /></ProtectedRoute>
         } />
+         <Route path="/review/:token" element={<ReviewTokenPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

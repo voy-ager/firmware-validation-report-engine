@@ -29,15 +29,12 @@ def auth_header(
 
 
 def run_pipeline(report_id: str, db: Session):
-    """Runs the full pipeline on a report. Called as background task."""
     from api.database import SessionLocal
     db = SessionLocal()
-    
     try:
         report = db.query(Report).filter(Report.id == report_id).first()
         if not report:
             return
-
         report.status = ReportStatus.PROCESSING
         db.commit()
 
@@ -130,10 +127,6 @@ def generate_report(
         raise HTTPException(status_code=404, detail="Report not found")
     if report.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
-    if report.status == ReportStatus.PROCESSING:
-        # Allow re-trigger if stuck (server restart mid-pipeline)
-        pass
-
     background_tasks.add_task(run_pipeline, report_id, db)
     return {"message": "Pipeline started", "report_id": report_id}
 
@@ -155,7 +148,11 @@ def approve_report(
     report.approved_at = datetime.utcnow()
     db.commit()
     db.refresh(report)
-    return {"message": "Report approved", "approved_by": current_user.full_name, "approved_at": str(report.approved_at)}
+    return {
+        "message": "Report approved",
+        "approved_by": current_user.full_name,
+        "approved_at": str(report.approved_at)
+    }
 
 
 @router.post("/{report_id}/share", response_model=ShareReviewResponse)
@@ -230,3 +227,97 @@ def export_report(
         )
     else:
         raise HTTPException(status_code=400, detail="Format must be 'pdf' or 'docx'")
+
+
+@router.get("/review/{token}")
+def get_review_by_token(token: str, db: Session = Depends(get_db)):
+    """Public endpoint — no auth required. Used by external reviewers."""
+    review_token = db.query(ReviewToken).filter(
+        ReviewToken.token == token
+    ).first()
+
+    if not review_token:
+        raise HTTPException(status_code=404, detail="Review link not found")
+
+    if review_token.expires_at.replace(tzinfo=None) < datetime.utcnow():
+        raise HTTPException(status_code=410, detail="Review link has expired")
+
+    report = db.query(Report).filter(
+        Report.id == review_token.report_id
+    ).first()
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    return {
+        "token": token,
+        "report": {
+            "id": report.id,
+            "title": report.title,
+            "platform": report.platform,
+            "build_id": report.build_id,
+            "report_type": report.report_type,
+            "status": report.status,
+            "executive_summary": report.executive_summary,
+            "risk_assessment": report.risk_assessment,
+            "engineer_notes": report.engineer_notes,
+            "summary_ai_generated": report.summary_ai_generated,
+            "risk_ai_generated": report.risk_ai_generated,
+            "metrics_json": report.metrics_json,
+            "created_at": str(report.created_at),
+            "approved_at": str(report.approved_at) if report.approved_at else None,
+        },
+        "expires_at": str(review_token.expires_at),
+        "reviewer_email": review_token.reviewer_email,
+        "is_used": review_token.is_used,
+    }
+
+
+@router.post("/review/{token}/approve")
+def approve_by_token(
+    token: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+):
+    """Public endpoint — external reviewer approves without login."""
+    review_token = db.query(ReviewToken).filter(
+        ReviewToken.token == token
+    ).first()
+
+    if not review_token:
+        raise HTTPException(status_code=404, detail="Review link not found")
+
+    if review_token.expires_at.replace(tzinfo=None) < datetime.utcnow():
+        raise HTTPException(status_code=410, detail="Review link has expired")
+
+    if review_token.is_used:
+        raise HTTPException(status_code=409, detail="This review link has already been used")
+
+    report = db.query(Report).filter(
+        Report.id == review_token.report_id
+    ).first()
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    reviewer_name = payload.get("reviewer_name", "External Reviewer")
+    reviewer_comment = payload.get("comment", "")
+
+    review_token.is_used = True
+    review_token.used_at = datetime.utcnow()
+
+    report.status = ReportStatus.APPROVED
+    report.approved_at = datetime.utcnow()
+
+    review_note = f"\n[Reviewed by {reviewer_name} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}]"
+    if reviewer_comment:
+        review_note += f"\nReviewer comment: {reviewer_comment}"
+    report.engineer_notes = (report.engineer_notes or "") + review_note
+
+    db.commit()
+
+    return {
+        "message": "Report approved successfully",
+        "reviewer_name": reviewer_name,
+        "approved_at": str(report.approved_at),
+    }
