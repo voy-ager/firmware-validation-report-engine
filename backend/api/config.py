@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -27,9 +28,14 @@ class Settings(BaseSettings):
     def llm_mock_mode(self) -> bool:
         return not self.anthropic_api_key
 
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"
 
 
 @lru_cache()

@@ -9,7 +9,7 @@ __pycache__/
 .env
 *.env
 
-# Conda env
+# Conda
 valreport/
 
 # Node
@@ -26,10 +26,17 @@ build/
 .DS_Store
 Thumbs.db
 
-# Generated reports output
+# Generated reports
 backend/reports/
+backend/uploads/
 *.pdf
 *.docx
 
 # Docker
 postgres_data/
+
+# Test scripts
+backend/reset_report.py
+backend/check_report.py
+backend/check_tokens.py
+backend/test_pipeline.py
