@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Intel Platform Validation - UEFI Firmware" time="3847.52">
+
+  <testsuite name="UEFI.BootSequence" tests="24" failures="3" errors="0" skipped="1" time="842.10">
+    <testcase name="test_secure_boot_enabled" classname="UEFI.BootSequence.SecureBoot" time="12.3"/>
+    <testcase name="test_fast_boot_config" classname="UEFI.BootSequence.FastBoot" time="8.7"/>
+    <testcase name="test_pxe_boot_ipv4" classname="UEFI.BootSequence.Network" time="45.2"/>
+    <testcase name="test_pxe_boot_ipv6" classname="UEFI.BootSequence.Network" time="44.8"/>
+    <testcase name="test_uefi_shell_launch" classname="UEFI.BootSequence.Shell" time="6.1"/>
+    <testcase name="test_boot_order_persistence" classname="UEFI.BootSequence.Config" time="18.4">
+      <failure type="AssertionError" message="Boot order not persisted after cold reset">
+        Expected boot order: [NVMe0, PXE, USB] but got [PXE, NVMe0, USB] after reset.
+        Platform: SPR-HBM Build: 2024.47.1 Regression introduced in FW delta 0x3A2F
+      </failure>
+    </testcase>
+    <testcase name="test_nvme_detection" classname="UEFI.BootSequence.Storage" time="22.1"/>
+    <testcase name="test_usb_boot_priority" classname="UEFI.BootSequence.USB" time="15.6"/>
+    <testcase name="test_ipmi_sol_console" classname="UEFI.BootSequence.IPMI" time="31.2"/>
+    <testcase name="test_bios_setup_entry" classname="UEFI.BootSequence.Setup" time="4.3"/>
+    <testcase name="test_memory_training_ddr5" classname="UEFI.BootSequence.Memory" time="187.4"/>
+    <testcase name="test_memory_spd_read" classname="UEFI.BootSequence.Memory" time="9.2"/>
+    <testcase name="test_cpu_microcode_update" classname="UEFI.BootSequence.CPU" time="14.8"/>
+    <testcase name="test_pcie_enumeration" classname="UEFI.BootSequence.PCIe" time="38.9">
+      <failure type="TimeoutError" message="PCIe device enumeration timeout on slot 3">
+        PCIe Gen5 x16 slot 3 failed to enumerate within 30s timeout.
+        Device: Gaudi3 accelerator. Last known good FW: 2024.45.3
+      </failure>
+    </testcase>
+    <testcase name="test_smbios_table_version" classname="UEFI.BootSequence.SMBIOS" time="3.1"/>
+    <testcase name="test_acpi_table_validation" classname="UEFI.BootSequence.ACPI" time="27.6"/>
+    <testcase name="test_tpm_presence_check" classname="UEFI.BootSequence.TPM" time="11.3"/>
+    <testcase name="test_tpm_pcr_extend" classname="UEFI.BootSequence.TPM" time="16.8"/>
+    <testcase name="test_ime_firmware_version" classname="UEFI.BootSequence.IME" time="8.4"/>
+    <testcase name="test_post_time_threshold" classname="UEFI.BootSequence.Performance" time="203.7">
+      <failure type="AssertionError" message="POST time 47.3s exceeds 40s threshold">
+        POST time regression detected. Current: 47.3s, Threshold: 40.0s, Previous: 38.1s
+        Suspected cause: DDR5 training latency increase in microcode 0x2B000590
+      </failure>
+    </testcase>
+    <testcase name="test_fan_speed_post" classname="UEFI.BootSequence.Thermal" time="22.3"/>
+    <testcase name="test_vga_output_post" classname="UEFI.BootSequence.Video" time="5.7"/>
+    <testcase name="test_chassis_intrusion_detect" classname="UEFI.BootSequence.Security" time="7.2"/>
+    <testcase name="test_numa_topology_report" classname="UEFI.BootSequence.NUMA" time="19.8">
+      <skipped message="Skipped: requires multi-socket configuration"/>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="BMC.Redfish" tests="18" failures="2" errors="1" skipped="0" time="1124.30">
+    <testcase name="test_redfish_login" classname="BMC.Redfish.Auth" time="3.2"/>
+    <testcase name="test_system_info_endpoint" classname="BMC.Redfish.System" time="2.8"/>
+    <testcase name="test_power_control_on" classname="BMC.Redfish.Power" time="45.1"/>
+    <testcase name="test_power_control_off" classname="BMC.Redfish.Power" time="48.3"/>
+    <testcase name="test_graceful_shutdown" classname="BMC.Redfish.Power" time="67.4"/>
+    <testcase name="test_chassis_led_control" classname="BMC.Redfish.Chassis" time="4.1"/>
+    <testcase name="test_thermal_sensors_read" classname="BMC.Redfish.Thermal" time="6.2"/>
+    <testcase name="test_fan_control_manual" classname="BMC.Redfish.Thermal" time="38.7">
+      <failure type="HTTPError" message="PUT /redfish/v1/Chassis/1/Thermal returned 500">
+        Fan manual override rejected by BMC firmware. BMC FW: 2.87.58f421a
+        Error: InternalError - Fan PID controller lock acquisition failed
+      </failure>
+    </testcase>
+    <testcase name="test_event_log_clear" classname="BMC.Redfish.Logs" time="2.1"/>
+    <testcase name="test_sel_log_entries" classname="BMC.Redfish.Logs" time="3.4"/>
+    <testcase name="test_firmware_inventory" classname="BMC.Redfish.Update" time="4.8"/>
+    <testcase name="test_bios_update_stage" classname="BMC.Redfish.Update" time="387.2"/>
+    <testcase name="test_bmc_update_verify" classname="BMC.Redfish.Update" time="214.6"/>
+    <testcase name="test_virtual_media_mount" classname="BMC.Redfish.VirtualMedia" time="18.3">
+      <failure type="ConnectionError" message="Virtual media ISO mount failed after 3 retries">
+        NFS mount timeout. Server: 10.105.42.18, Path: /exports/validation/iso
+        Network connectivity confirmed. Suspected NFS server load issue.
+      </failure>
+    </testcase>
+    <testcase name="test_snmp_trap_generation" classname="BMC.Redfish.SNMP" time="22.7"/>
+    <testcase name="test_ipmi_over_lan" classname="BMC.Redfish.IPMI" time="8.9"/>
+    <testcase name="test_kvm_session_launch" classname="BMC.Redfish.KVM" time="34.2"/>
+    <testcase name="test_certificate_validation" classname="BMC.Redfish.Security" time="210.8">
+      <error type="SSLError" message="Certificate chain validation failed unexpectedly">
+        Unexpected SSL exception during cert chain walk. May indicate BMC TLS stack regression.
+      </error>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="PCIe.RAS" tests="15" failures="1" errors="0" skipped="2" time="923.80">
+    <testcase name="test_aer_correctable_inject" classname="PCIe.RAS.AER" time="87.3"/>
+    <testcase name="test_aer_uncorrectable_inject" classname="PCIe.RAS.AER" time="94.1"/>
+    <testcase name="test_dpc_trigger_recovery" classname="PCIe.RAS.DPC" time="156.4"/>
+    <testcase name="test_pme_wakeup" classname="PCIe.RAS.Power" time="45.8"/>
+    <testcase name="test_link_retrain_speed" classname="PCIe.RAS.Link" time="38.2"/>
+    <testcase name="test_surprise_removal_sim" classname="PCIe.RAS.Hotplug" time="72.1">
+      <failure type="KernelPanic" message="Kernel oops on surprise removal of NVMe device">
+        BUG: unable to handle kernel paging request at ffffc90003a2b000
+        Call trace: nvme_remove_dead_ctrl+0x8f/0x120
+        Platform requires hotfix patch 2024-11-KP-004
+      </failure>
+    </testcase>
+    <testcase name="test_ecrc_generation" classname="PCIe.RAS.ECRC" time="29.4"/>
+    <testcase name="test_lane_margining" classname="PCIe.RAS.Signal" time="187.6"/>
+    <testcase name="test_ltssm_state_machine" classname="PCIe.RAS.LTSSM" time="44.2"/>
+    <testcase name="test_bandwidth_utilization" classname="PCIe.RAS.Performance" time="93.4"/>
+    <testcase name="test_p2p_dma_transfer" classname="PCIe.RAS.DMA" time="67.8"/>
+    <testcase name="test_iommu_group_isolation" classname="PCIe.RAS.IOMMU" time="38.9"/>
+    <testcase name="test_vf_creation_sriov" classname="PCIe.RAS.SRIOV" time="24.1">
+      <skipped message="Skipped: SR-IOV not enabled in this build config"/>
+    </testcase>
+    <testcase name="test_peer_to_peer_gaudi" classname="PCIe.RAS.Gaudi" time="28.7">
+      <skipped message="Skipped: Gaudi3 accelerator not present in this chassis"/>
+    </testcase>
+    <testcase name="test_gen5_signal_integrity" classname="PCIe.RAS.Signal" time="15.8"/>
+  </testsuite>
+
+</testsuites>

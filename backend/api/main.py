@@ -6,7 +6,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from .config import get_settings
 from .database import Base, engine
-from .routes import auth, reports
+from .routes import auth, reports, pipeline
 
 settings = get_settings()
 
@@ -47,6 +47,7 @@ async def security_headers(request: Request, call_next):
 
 app.include_router(auth.router)
 app.include_router(reports.router)
+app.include_router(pipeline.router)
 
 
 @app.get("/health")

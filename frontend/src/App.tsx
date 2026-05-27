@@ -3,6 +3,7 @@ import { useAuthStore } from "./store/authStore";
 import LoginPage from "./pages/Login.tsx";
 import DashboardPage from "./pages/Dashboard.tsx";
 import NewReportPage from "./pages/NewReport.tsx";
+import ReviewPage from "./pages/Review.tsx";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -19,6 +20,9 @@ export default function App() {
         } />
         <Route path="/reports/new" element={
           <ProtectedRoute><NewReportPage /></ProtectedRoute>
+        } />
+        <Route path="/reports/:id" element={
+          <ProtectedRoute><ReviewPage /></ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

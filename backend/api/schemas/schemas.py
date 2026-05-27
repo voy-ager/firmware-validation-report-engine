@@ -58,11 +58,13 @@ class ReportResponse(BaseModel):
     report_type: str
     status: ReportStatus
     input_filename: Optional[str] = None
+    metrics_json: Optional[str] = None
+    charts_json: Optional[str] = None
     executive_summary: Optional[str] = None
     risk_assessment: Optional[str] = None
     engineer_notes: Optional[str] = None
-    summary_ai_generated: bool
-    risk_ai_generated: bool
+    summary_ai_generated: bool = True
+    risk_ai_generated: bool = True
     pdf_path: Optional[str] = None
     docx_path: Optional[str] = None
     owner_id: str

@@ -49,4 +49,10 @@ export const reportsApi = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
+  generate: (id: string) => api.post(`/reports/${id}/generate`),
+  approve: (id: string) => api.post(`/reports/${id}/approve`),
+  share: (id: string, data: { reviewer_email?: string; expires_hours: number }) =>
+    api.post(`/reports/${id}/share`, data),
+  export: (id: string, format: "pdf" | "docx") =>
+    api.get(`/reports/${id}/export/${format}`, { responseType: "blob" }),
 };

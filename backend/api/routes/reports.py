@@ -7,6 +7,7 @@ from ..database import get_db
 from ..models.models import Report, ReportStatus
 from ..schemas.schemas import ReportCreate, ReportResponse, ReportUpdate
 from ..routes.auth import get_current_user
+from fastapi import APIRouter, Depends, HTTPException, Header, UploadFile, File, BackgroundTasks
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -62,6 +63,7 @@ def create_report(
 @router.post("/{report_id}/upload")
 async def upload_test_file(
     report_id: str,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user=Depends(auth_header),
@@ -75,15 +77,23 @@ async def upload_test_file(
 
     content = await file.read(MAX_FILE_SIZE_BYTES + 1)
     if len(content) > MAX_FILE_SIZE_BYTES:
-        raise HTTPException(
-            status_code=422,
-            detail=f"File too large. Maximum size is {MAX_FILE_SIZE_MB}MB"
-        )
+        raise HTTPException(status_code=422, detail=f"File too large. Maximum size is {MAX_FILE_SIZE_MB}MB")
+
+    # Save file to disk for pipeline
+    uploads_dir = os.path.join(os.path.dirname(__file__), "../../uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    save_path = os.path.join(uploads_dir, f"{report_id}_{file.filename}")
+    with open(save_path, "wb") as f:
+        f.write(content)
 
     report.input_filename = file.filename
     report.input_format = os.path.splitext(file.filename or "")[-1].lower().strip(".")
     report.status = ReportStatus.PROCESSING
     db.commit()
+    
+    # Auto-trigger pipeline
+    from .pipeline import run_pipeline
+    background_tasks.add_task(run_pipeline, report_id, db)
 
     return {
         "message": "File uploaded successfully",
